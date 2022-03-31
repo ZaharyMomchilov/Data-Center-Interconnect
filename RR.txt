@@ -1,0 +1,96 @@
+rr@MPLS-EVPN:rr> show configuration
+interfaces {
+    ge-1/0/8 {
+        unit 0 {
+            family inet {
+                address 10.11.1.1/30;
+            }
+            family mpls;
+        }
+    }
+    ge-1/1/9 {
+        unit 0 {
+            family inet {
+                address 10.11.3.1/30;
+            }
+            family mpls;
+        }
+    }
+    lo0 {
+        unit 8 {
+            family inet {
+                address 172.16.3.1/32;
+            }
+        }
+    }
+}
+protocols {
+    bgp {
+        group EVPN {
+            type internal;
+            local-address 172.16.3.1;
+            family inet-vpn {
+                unicast;
+            }
+            family evpn {
+                signaling;
+            }
+            cluster 172.16.3.1;
+            allow 172.16.1.0/24;
+        }
+    }
+    mpls {
+        traffic-engineering {
+            bgp-igp-both-ribs;
+        }
+        interface all;
+    }
+    ospf {
+        area 0.0.0.0 {
+            interface lo0.8 {
+                passive;
+            }
+            interface all {
+                interface-type p2p;
+            }
+        }
+    }
+}
+policy-options {
+    policy-statement no-fib {
+        term 1 {
+            from protocol bgp;
+            then reject;
+        }
+    }
+}
+routing-instances {
+    irb {
+        routing-options {
+            resolution {
+                rib irb.inet.0 {
+                    resolution-ribs inet.0;
+                }
+            }
+        }
+        instance-type vrf;
+        route-distinguisher 172.16.3.1:55;
+        vrf-target target:64513:55;
+        vrf-table-label;
+    }
+}
+routing-options {
+    resolution {
+        rib bgp.evpn.0 {
+            resolution-ribs inet.0;
+        }
+        rib bgp.l3vpn.0 {
+            resolution-ribs inet.0;
+        }
+    }
+    router-id 172.16.3.1;
+    autonomous-system 64513;
+    forwarding-table {
+        export no-fib;
+    }
+}

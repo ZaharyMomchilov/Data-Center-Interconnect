@@ -1,0 +1,72 @@
+interfaces {
+    ge-1/0/3 {
+        unit 0 {
+            family inet {
+                address 10.10.2.2/30;
+            }
+            family mpls;
+        }
+    }
+    ge-1/0/7 {
+        unit 0 {
+            family inet {
+                address 10.1.2.2/30;
+            }
+            family mpls;
+        }
+    }
+    ge-1/1/0 {
+        unit 0 {
+            family inet {
+                address 10.2.4.1/30;
+            }
+            family mpls;
+        }
+    }
+    ge-1/2/3 {
+        unit 0 {
+            family inet {
+                address 10.20.2.2/30;
+            }
+            family mpls;
+        }
+    }
+    lo0 {
+        unit 4 {
+            family inet {
+                address 172.16.2.2/32;
+            }
+        }
+    }
+}
+protocols {
+    mpls {
+        traffic-engineering {
+            bgp-igp-both-ribs;
+        }
+        interface all;
+    }
+    ospf {
+        traffic-engineering;
+        area 0.0.0.0 {
+            interface all {
+                interface-type p2p;
+            }
+        }
+    }
+    rsvp {
+        interface all;
+    }
+}
+policy-options {
+    policy-statement load-balancing-policy {
+        then {
+            load-balance per-packet;
+        }
+    }
+}
+routing-options {
+    forwarding-table {
+        export load-balancing-policy;
+    }
+}
